@@ -1,5 +1,5 @@
 {
-  "name": "streamify",
+  "name": "stellar",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
@@ -9,5 +9,13 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": ""
+  "description": "<h1 align=\"center\">✨ Fullstack Chat & Video Calling App ✨</h1>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/burakorkmez/streamify-video-calls.git"
+  },
+  "bugs": {
+    "url": "https://github.com/burakorkmez/streamify-video-calls/issues"
+  },
+  "homepage": "https://github.com/burakorkmez/streamify-video-calls#readme"
 }

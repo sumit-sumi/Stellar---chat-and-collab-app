@@ -33,7 +33,7 @@ const ChatPage = () => {
   const { data: tokenData } = useQuery({
     queryKey: ["streamToken"],
     queryFn: getStreamToken,
-    enabled: !!authUser, // this will run only when authUser is available
+    enabled: !!authUser,
   });
 
   useEffect(() => {
@@ -43,24 +43,30 @@ const ChatPage = () => {
       try {
         console.log("Initializing stream chat client...");
 
+        // Use the singleton client
         const client = StreamChat.getInstance(STREAM_API_KEY);
 
-        await client.connectUser(
-          {
-            id: authUser._id,
-            name: authUser.fullName,
-            image: authUser.profilePic,
-          },
-          tokenData.token
-        );
+        // Disconnect previous user if necessary
+        if (client.userID && client.userID !== authUser._id) {
+          await client.disconnectUser();
+          console.log("Disconnected previous Stream user");
+        }
 
-        //
+        // Connect user only if not connected
+        if (!client.userID) {
+          await client.connectUser(
+            {
+              id: authUser._id,
+              name: authUser.fullName,
+              image: authUser.profilePic,
+            },
+            tokenData.token
+          );
+          console.log("Stream user connected:", authUser.fullName);
+        }
+
+        // Create / watch channel
         const channelId = [authUser._id, targetUserId].sort().join("-");
-
-        // you and me
-        // if i start the chat => channelId: [myId, yourId]
-        // if you start the chat => channelId: [yourId, myId]  => [myId,yourId]
-
         const currChannel = client.channel("messaging", channelId, {
           members: [authUser._id, targetUserId],
         });
@@ -78,16 +84,19 @@ const ChatPage = () => {
     };
 
     initChat();
+
+    // Optional: cleanup when component unmounts
+    return () => {
+      if (chatClient) {
+        chatClient.disconnectUser().catch((err) => console.log("Cleanup error:", err));
+      }
+    };
   }, [tokenData, authUser, targetUserId]);
 
   const handleVideoCall = () => {
     if (channel) {
       const callUrl = `${window.location.origin}/call/${channel.id}`;
-
-      channel.sendMessage({
-        text: `I've started a video call. Join me here: ${callUrl}`,
-      });
-
+      channel.sendMessage({ text: `I've started a video call. Join me here: ${callUrl}` });
       toast.success("Video call link sent successfully!");
     }
   };
@@ -112,4 +121,5 @@ const ChatPage = () => {
     </div>
   );
 };
+
 export default ChatPage;
