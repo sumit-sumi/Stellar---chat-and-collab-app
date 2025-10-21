@@ -12,22 +12,38 @@ import chatRoutes from "./routes/chat.route.js";
 import { connectDB } from "./lib/db.js";
 import { syncStreamUsers } from "./lib/scripts/syncStreamUsers.js";
 
-const app = express(); // <-- Must initialize app FIRST
+const app = express();
 const PORT = process.env.PORT || 5000;
 const __dirname = path.resolve();
 
-// ---------------------- MIDDLEWARE ----------------------
-
-// Helmet + CSP
+// ------------------ SECURITY (Helmet) ------------------
 app.use(
   helmet({
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "'unsafe-eval'"], // needed for some WebRTC/video libs
-        connectSrc: ["'self'", "wss:", "https:"], // allow websockets and API calls
-        imgSrc: ["'self'", "data:"],
+
+        scriptSrc: ["'self'", "'unsafe-eval'", "'unsafe-inline'"],
+
+        connectSrc: [
+          "'self'",
+          "wss:",
+          "https:",
+          "stun:",
+          "turn:",
+          "https://*.stream-io-api.com",
+          "https://*.getstream.io",
+        ],
+
+        imgSrc: [
+          "'self'",
+          "data:",
+          "https://flagcdn.com",
+          "https://avatar.iran.liara.run",
+        ],
+
         styleSrc: ["'self'", "'unsafe-inline'"],
+
         mediaSrc: ["'self'", "blob:"],
         frameSrc: ["'self'"],
       },
@@ -35,7 +51,7 @@ app.use(
   })
 );
 
-// CORS
+// ------------------ CORS ------------------
 app.use(
   cors({
     origin: "http://localhost:5173",
@@ -43,16 +59,16 @@ app.use(
   })
 );
 
-// JSON + Cookies
+// ------------------ PARSERS ------------------
 app.use(express.json());
 app.use(cookieParser());
 
-// ---------------------- ROUTES ----------------------
+// ------------------ ROUTES ------------------
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/chat", chatRoutes);
 
-// ---------------------- PRODUCTION FRONTEND ----------------------
+// ------------------ FRONTEND ------------------
 if (process.env.NODE_ENV === "production") {
   app.use(express.static(path.join(__dirname, "../frontend/dist")));
   app.get("*", (req, res) => {
@@ -60,7 +76,7 @@ if (process.env.NODE_ENV === "production") {
   });
 }
 
-// ---------------------- SERVER START ----------------------
+// ------------------ SERVER STARTUP ------------------
 const startServer = async () => {
   try {
     await connectDB();
@@ -71,10 +87,10 @@ const startServer = async () => {
     }
 
     app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
+      console.log(`🚀 Server running on port ${PORT}`);
     });
   } catch (err) {
-    console.error("Server startup failed:", err.message);
+    console.error("❌ Server startup failed:", err.message);
     process.exit(1);
   }
 };
