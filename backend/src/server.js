@@ -54,10 +54,7 @@ app.use(
 // ------------------ CORS ------------------
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "https://stellar-chat-and-collab-app.onrender.com", // ✅ replace with your exact Render frontend domain
-    ],
+    origin: "http://localhost:5173",
     credentials: true, // ✅ must stay true for cookies
   })
 );
